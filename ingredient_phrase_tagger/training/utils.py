@@ -304,3 +304,16 @@ def export_data(lines):
             output.append(joinLine([token] + features))
         output.append('')
     return '\n'.join(output)
+
+def export_data_line(line):
+    """ Parse "raw" ingredient lines into CRF-ready output """
+    output = []
+
+    line_clean = re.sub('<[^<]+?>', '', line)
+    tokens = tokenize(line_clean)
+
+    for i, token in enumerate(tokens):
+        features = getFeatures(token, i+1, tokens)
+        output.append(joinLine([token] + features))
+    output.append('')
+    return '\n'.join(output)
