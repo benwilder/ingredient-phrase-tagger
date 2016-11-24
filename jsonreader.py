@@ -7,5 +7,5 @@ with open('out.json') as data_file:
 for i in data['results']:
     if 'name' in i:
         print(i['name'])
-    else:
+    else
     	print("blank")
