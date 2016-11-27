@@ -1,0 +1,442 @@
+Notes: 
+
+First do the scraping of 1000 lines:
+.. then export it 
+
+Run the model against it
+python bin/parse-ingredients.py bbcgoodfood_1000_export.txt > bbcgoodfood_1000_export_results.txt
+
+Convert to json:
+python bin/convert-to-json.py bbcgoodfood_1000_export_results.txt > bbcgoodfood_1000_export_results.json
+
+Get just the model names: 
+python jsonreader.py > bbcgoodfood_1000_export_results_trimmed.txt
+
+Then import it back into excel
+
+Then remove spaces:
+update scrapedrecipeingredient set `modellednameshort` = REPLACE( `modelledname`, ' ', '');
+
+Then get distinct list and put it in a table:
+INSERT INTO recipeingredient (name) 
+SELECT DISTINCT(`scrapedrecipeingredient`.`modellednameshort`) FROM `scrapedrecipeingredient`
+
+Now put denormalise back so that it can be linked to the recipe record:
+INSERT INTO `recipeingredientsearchrecord` (recipeingredientsearchrecord.`scrapedrecipeguid`, recipeingredientsearchrecord.`ingredientsrequired`, `recipeingredientsearchrecord`.`ingredientsrequiredcount`)
+SELECT scrapedrecipeingredient.`scrapedrecipeguid`, GROUP_CONCAT(`scrapedrecipeingredient`.`modellednameshort` SEPARATOR ' ') as ingredientsrequired, COUNT(scrapedrecipeingredient.`scrapedrecipeguid`) as ingredientscount
+FROM scrapedrecipeingredient GROUP BY scrapedrecipeingredient.`scrapedrecipeguid`
+
+Now Get all the recipes and search terms:
+SELECT 
+scrapedrecipe.`name`,
+`recipeingredientsearchrecord`.`ingredientsrequired`,
+recipeingredientsearchrecord.`ingredientsrequiredcount`
+FROM 
+scrapedrecipe INNER JOIN recipeingredientsearchrecord ON scrapedrecipe.`scrapedrecipeguid` = `recipeingredientsearchrecord`.`scrapedrecipeguid`
+ORDER BY scrapedrecipe.name ASC
+
+
+Download ES
+curl -L -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.0.1.tar.gz
+
+Extract it:
+tar -xvf elasticsearch-5.0.1.tar.gz
+
+Get in there:
+cd elasticsearch-5.0.1/bin
+
+Start it:
+./elasticsearch
+
+Download kibana:
+https://www.elastic.co/downloads/kibana
+
+Extract it: 
+tar -xvf kibana-5.0.1-darwin-x86_64.tar.gz
+
+Edit config:
+vi kibana-5.0.1-darwin-x86_64/config/kibana.yml
+Change elasticsearch.url to be correct
+
+Start Kibana:
+./kibana-5.0.1-darwin-x86_64/bin/kibana
+
+Create index and mappings:
+
+PUT recipedb
+{
+    "settings" : {
+        "number_of_shards" : 1
+    },
+    "mappings" : {
+        "recipe" : {
+            "properties" : {
+                "ingredientsrequired" : { "type" : "text" },
+                "ingredientsrequiredcount" : {"type" : "integer"},
+                "title" : {"type" : "text"},
+                "url" : {"type": "text"}
+            }
+        }
+    }
+}
+
+Create a test recipe:
+
+curl -X POST 'http://localhost:9200/recipedb/recipe?pretty' -d'
+{
+    "ingredientsrequired": "freshbasil oil",
+    "ingredientsrequiredcount":"2",
+    "title":"Basil with oil",
+    "url":"http://127.0.0.1"
+}'
+
+Create normal recipes:
+
+
+curl -X POST 'http://localhost:9200/recipedb/recipe?pretty' -d'
+{
+    "title": "Speedy Spaghetti with Chicken and Fresh Tomato",
+    "url": "http://www.myrecipes.com/recipe/speedy-spaghetti-with-chicken-fresh-tomato",
+    "ingredientsrequired": "spaghetti chickenbreast onion garlic tomatoes goatscheese freshbasil",
+    "ingredientsrequiredcount": "7"
+}'
+
+curl -X POST 'http://localhost:9200/recipedb/recipe?pretty' -d'
+{
+    "title": "Spaghetti with Chicken, Bacon and Spinach",
+    "url": "http://www.delish.com/cooking/recipe-ideas/recipes/a45774/chicken-bacon-and-spinach-spaghetti-recipe/",
+    "ingredientsrequired": "spaghetti chickenbreast bacon garlic tomatoes spinach parmesan freshbasil",
+    "ingredientsrequiredcount": "8"
+}'
+
+curl -X POST 'http://localhost:9200/recipedb/recipe?pretty' -d'
+{
+    "title": "Spaghetti with prawns",
+    "url": "http://allrecipes.co.uk/recipe/8670/spaghetti-with-prawns.aspx?o_is=Hub_TopRecipe_1",
+    "ingredientsrequired": "spaghetti lemon garlic prawns freshbasil",
+    "ingredientsrequiredcount": "5"
+}'
+
+curl -X POST 'http://localhost:9200/recipedb/recipe?pretty' -d'
+{
+    "title": "test missing record",
+    "url": "http://allrecipes.co.uk/recipe/8670/spaghetti-with-prawns.aspx?o_is=Hub_TopRecipe_1",
+    "ingredientsrequired": "tripe catfood dogfood",
+    "ingredientsrequiredcount": "3"
+}'
+
+
+Delete a doc: 
+
+curl -X DELETE 'http://127.0.0.1:9200/recipedb/recipe/AVinKGs-beIoKlnKyxWJ'
+
+
+
+Search:
+
+
+curl -X GET 'http://localhost:9200/recipedb/_search?pretty' -d '
+{
+    "query": {
+      "function_score": {
+        "query": {
+          "match": {
+            "ingredientsrequired": "spaghetti freshbasil garlic lemon prawns beef lamb"
+          }
+        },
+        "boost_mode": "replace",
+        "score_mode": "sum",
+        "functions": [
+          {
+            "filter": {
+              "term": {
+                "ingredientsrequired": "spaghetti"
+              }
+            },
+            "weight": 1
+          },
+          {
+           "filter": {
+              "term": {
+                "ingredientsrequired": "freshbasil"
+              }
+            },
+            "weight": 1
+          },
+          {
+            "filter": {
+             "term": {
+                "ingredientsrequired": "garlic"
+              }
+            },
+            "weight": 1
+          },
+          {
+            "filter": {
+             "term": {
+                "ingredientsrequired": "lemon"
+             }
+            },
+           "weight": 1
+          },
+          {
+           "filter": {
+              "term": {
+               "ingredientsrequired": "prawns"
+             }
+            },
+            "weight": 1
+          },
+          {
+            "filter": {
+              "term": {
+                "ingredientsrequired": "beef"
+              }
+           },
+            "weight": 1
+          },
+          {
+            "filter": {
+              "term": {
+                "ingredientsrequired": "lamb"
+              }
+            },
+            "weight": 1
+         },
+          {
+            "script_score": {
+              "script": "_score - doc[\"ingredientsrequiredcount\"].value"
+           }
+          }
+       ]
+      }
+   }
+}'
+
+
+curl -X GET 'http://localhost:9200/recipedb/_search?pretty' -d '
+{
+    "query": {
+      "function_score": {
+        "query": {
+          "match": {
+            "ingredientsrequired": "spaghetti freshbasil garlic lemon prawns beef lamb"
+          }
+        },
+        "boost_mode": "replace",
+        "score_mode": "sum",
+        "functions": [
+          {
+            "filter": {
+              "term": {
+                "ingredientsrequired": "spaghetti"
+              }
+            },
+            "weight": 1
+          },
+          {
+           "filter": {
+              "term": {
+                "ingredientsrequired": "freshbasil"
+              }
+            },
+            "weight": 1
+          },
+          {
+            "filter": {
+             "term": {
+                "ingredientsrequired": "garlic"
+              }
+            },
+            "weight": 1
+          },
+          {
+            "filter": {
+             "term": {
+                "ingredientsrequired": "lemon"
+             }
+            },
+           "weight": 1
+          },
+          {
+           "filter": {
+              "term": {
+               "ingredientsrequired": "prawns"
+             }
+            },
+            "weight": 1
+          },
+          {
+            "filter": {
+              "term": {
+                "ingredientsrequired": "beef"
+              }
+           },
+            "weight": 1
+          },
+          {
+            "filter": {
+              "term": {
+                "ingredientsrequired": "lamb"
+              }
+            },
+            "weight": 1
+         },
+          {
+            "script_score" : {
+				"script" : {
+				"lang": "painless",
+				"inline": "_score"
+				}
+			}
+          }
+       ]
+      }
+   }
+}'
+
+
+
+curl -X GET 'http://localhost:9200/recipedb/_search?pretty' -d '
+{
+    "query": {
+      "function_score": {
+        "query": {
+          "match": {
+            "ingredientsrequired": "spaghetti freshbasil garlic lemon prawns beef lamb"
+          }
+        },
+        "boost_mode": "replace",
+        "score_mode": "sum",
+        "functions": [
+          {
+            "filter": {
+              "term": {
+                "ingredientsrequired": "spaghetti"
+              }
+            },
+            "weight": 1
+          },
+          {
+           "filter": {
+              "term": {
+                "ingredientsrequired": "freshbasil"
+              }
+            },
+            "weight": 1
+          },
+          {
+            "filter": {
+             "term": {
+                "ingredientsrequired": "garlic"
+              }
+            },
+            "weight": 1
+          },
+          {
+            "filter": {
+             "term": {
+                "ingredientsrequired": "lemon"
+             }
+            },
+           "weight": 1
+          },
+          {
+           "filter": {
+              "term": {
+               "ingredientsrequired": "prawns"
+             }
+            },
+            "weight": 1
+          },
+          {
+            "filter": {
+              "term": {
+                "ingredientsrequired": "beef"
+              }
+           },
+            "weight": 1
+          },
+          {
+            "filter": {
+              "term": {
+                "ingredientsrequired": "lamb"
+              }
+            },
+            "weight": 1
+         }
+       ]
+      }
+   }
+}'
+
+curl -X GET 'http://localhost:9200/recipedb/_search?pretty' -d '
+{
+    "query": {
+      "function_score": {
+        "query": {
+          "match": {
+            "ingredientsrequired": "avocado lemon chicken thyme"
+          }
+        },
+        "boost_mode": "replace",
+        "score_mode": "sum",
+        "functions": [
+          {
+            "filter": {
+              "term": {
+                "ingredientsrequired": "avocado"
+              }
+            },
+            "weight": 1
+          },
+          {
+           "filter": {
+              "term": {
+                "ingredientsrequired": "lemon"
+              }
+            },
+            "weight": 1
+          },
+          {
+            "filter": {
+             "term": {
+                "ingredientsrequired": "chicken"
+              }
+            },
+            "weight": 1
+          },
+          {
+            "filter": {
+             "term": {
+                "ingredientsrequired": "thyme"
+             }
+            },
+           "weight": 1
+          },
+          {
+            "script_score": {
+              "script": "_score - doc[\"ingredientsrequiredcount\"].value"
+           }
+          }
+       ]
+      }
+   },
+   "script_fields": {
+			"total_goals": {
+				"script": {
+				"lang": "painless",
+				"inline": "int total = 0; return total;"
+				}
+			}
+	}
+}'
+
+Delete all from the index:
+
+POST recipedb/recipe/_delete_by_query?conflicts=proceed
+{
+  "query": {
+    "match_all": {}
+  }
+}
