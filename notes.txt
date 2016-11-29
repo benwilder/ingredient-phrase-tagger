@@ -76,6 +76,13 @@ PUT recipedb
                 "title" : {"type" : "text"},
                 "url" : {"type": "text"}
             }
+        },
+        "ingredient" : {
+            "properties" : {
+                "ingredient" : { "type" : "text" },
+                "ingredientdisplayname" : {"type" : "text"},
+                "ingredientautocompletename" : {"type" : "completion"}
+            }
         }
     }
 }

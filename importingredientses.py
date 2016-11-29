@@ -18,7 +18,7 @@ print 'Importing into elastic search'
 # Select all ingredients for import
 selectIngredients = """
 SELECT 
-name,displayname
+name,displayname,autocompletename
 FROM 
 recipeingredient
 """
@@ -27,6 +27,7 @@ cur.execute(selectIngredients)
 for row in cur:
 	doc = {
     'ingredient': row['name'],
-    'ingredientdisplayname': row['displayname']
+    'ingredientdisplayname': row['displayname'],
+    'ingredientautocompletename': row['autocompletename']
 	}
 	res = es.index(index='recipedb', doc_type='ingredient', body=doc)
