@@ -1,0 +1,56 @@
+// Creating elastic search setup
+
+Delete recipedb
+
+DELETE recipedb
+or
+curl -XDELETE 'localhost:9200/recipedb?pretty'
+
+Then delete index pattern in Kibana
+
+
+Delete ingredientdb
+
+DELETE ingredientdb
+or
+curl -XDELETE 'localhost:9200/ingredientdb?pretty'
+
+Then delete index pattern in Kibana
+
+
+Create recipedb index and type:
+
+PUT recipedb
+{
+    "settings" : {
+        "number_of_shards" : 1
+    },
+    "mappings" : {
+        "recipe" : {
+            "properties" : {
+                "ingredientsrequired" : { "type" : "text" },
+                "ingredientsrequiredcount" : {"type" : "integer"},
+                "title" : {"type" : "text"},
+                "url" : {"type": "text"}
+            }
+        }
+    }
+}
+
+Create ingredientdb
+
+PUT ingredientdb
+{
+    "settings" : {
+        "number_of_shards" : 1
+    },
+    "mappings" : {
+        "ingredient" : {
+            "properties" : {
+                "ingredient" : { "type" : "text" },
+                "ingredientdisplayname" : {"type" : "text"},
+                "ingredientautocompletename" : {"type" : "completion"}
+            }
+        }
+    }
+}

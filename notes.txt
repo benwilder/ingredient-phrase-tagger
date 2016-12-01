@@ -18,8 +18,8 @@ Then remove spaces:
 update scrapedrecipeingredient set `modellednameshort` = REPLACE( `modelledname`, ' ', '');
 
 Then get distinct list and put it in a table:
-INSERT INTO recipeingredient (name) 
-SELECT DISTINCT(`scrapedrecipeingredient`.`modellednameshort`) FROM `scrapedrecipeingredient`
+INSERT INTO recipeingredient (name, displayname, autocompletename) 
+SELECT DISTINCT(modellednameshort),modelledname,modelledname FROM `scrapedrecipeingredient`
 
 Now put denormalise back so that it can be linked to the recipe record:
 INSERT INTO `recipeingredientsearchrecord` (recipeingredientsearchrecord.`scrapedrecipeguid`, recipeingredientsearchrecord.`ingredientsrequired`, `recipeingredientsearchrecord`.`ingredientsrequiredcount`)

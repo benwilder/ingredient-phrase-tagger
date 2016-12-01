@@ -30,4 +30,4 @@ for row in cur:
     'ingredientdisplayname': row['displayname'],
     'ingredientautocompletename': row['autocompletename']
 	}
-	res = es.index(index='recipedb', doc_type='ingredient', body=doc)
+	res = es.index(index='ingredientdb', doc_type='ingredient', body=doc)
