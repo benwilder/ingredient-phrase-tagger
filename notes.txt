@@ -10,7 +10,7 @@ Convert to json:
 python bin/convert-to-json.py bbcgoodfood_1000_export_results.txt > bbcgoodfood_1000_export_results.json
 
 Get just the model names: 
-python jsonreader.py > bbcgoodfood_1000_export_results_trimmed.txt
+python jsonreader.py bbcgoodfood_1000_export_results_trimmed.txt > bbcgoodfood_1000_export_results_trimmed.txt
 
 Then import it back into excel
 
