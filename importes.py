@@ -38,7 +38,7 @@ for row in cur:
 	#print ingredientList
 	#print i, row['ingredientsrequired'].deccode('utf-8')
 	doc = {
-    'title': row['scrapedurl'],
+    'title': row['name'].encode('utf-8'),
     'url': row['scrapedurl'],
     'ingredientsrequired': row['ingredientsrequired'].encode('utf-8'),
     'ingredientsrequiredcount': str(row['ingredientsrequiredcount'])

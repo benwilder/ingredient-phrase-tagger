@@ -20,7 +20,7 @@ selectIngredients = """
 SELECT 
 name,displayname,autocompletename
 FROM 
-recipeingredient
+recipeingredient_current
 """
 
 cur.execute(selectIngredients)
