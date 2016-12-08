@@ -14,3 +14,10 @@ SELECT scrapedrecipeingredient_current.modellednameshort, COUNT(scrapedrecipeing
 FROM scrapedrecipeingredient_current
 GROUP BY scrapedrecipeingredient_current.modelledname
 ORDER BY count DESC
+
+Get most popular ingredients that dont have a match from ingredient DB:
+SELECT scrapedrecipeingredient_current.modellednameshort, COUNT(scrapedrecipeingredient_current.modellednameshort) as count
+FROM scrapedrecipeingredient_current
+WHERE scrapedrecipeingredient_current.`modellednameshortnormalised` IS NULL
+GROUP BY scrapedrecipeingredient_current.modelledname
+ORDER BY count DESC
