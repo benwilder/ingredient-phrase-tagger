@@ -1,0 +1,16 @@
+Get how many lines without a match
+SELECT COUNT(*)
+FROM `scrapedrecipeingredient_current`
+WHERE `modellednameshortnormalised` IS NULL
+
+Get how many lines with a match
+SELECT COUNT(*)
+FROM `scrapedrecipeingredient_current`
+WHERE `modellednameshortnormalised` IS NOT NULL
+
+
+Get most popular ingredients:
+SELECT scrapedrecipeingredient_current.modellednameshort, COUNT(scrapedrecipeingredient_current.modellednameshort) as count
+FROM scrapedrecipeingredient_current
+GROUP BY scrapedrecipeingredient_current.modelledname
+ORDER BY count DESC
