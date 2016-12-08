@@ -22,6 +22,8 @@ for row in cur:
     # Get the synonyms that match this
     cursynonyms.execute("SELECT name FROM ingredientsynonym WHERE synonym = %s", (modellednameshort,))
     for rowsynonym in cursynonyms:
+
+    	# Where we find a match, update the master record
     	matchedName = rowsynonym['name']
     	print "Found a match to " + matchedName + " adding to record"
     	curupdate.execute("UPDATE scrapedrecipeingredient_current SET  modellednameshortnormalised = %s WHERE id = %s", (matchedName,ingredientid))
