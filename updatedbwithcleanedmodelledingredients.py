@@ -15,22 +15,13 @@ selectIngredients = "SELECT id, scrapedrecipeguid, modelledname, modellednamesho
 cur.execute(selectIngredients)
 
 # We want to clean the following
-# 
-# [heaped]tsp
-# tbsp
-# [d+][k]g
-# pack
-# 
-#
-#
-#
 updatecounter = 0
 
 for row in cur:
     modelledname = row['modelledname']
     ingredientid = row['id']
 
-    # 
+    # Perform cleaning
     modellednameclean = re.sub(r'(\d+(\.\d+)?)%', "", modelledname)
     modellednameclean = re.sub(r'(\d+(\.\d+)?) litres', "", modellednameclean)
     modellednameclean = re.sub(r'tub ', "", modellednameclean)

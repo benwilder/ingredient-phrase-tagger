@@ -15,7 +15,7 @@ python jsonreader.py bbcgoodfood_1000_export_results_trimmed.txt > bbcgoodfood_1
 Then import it back into excel
 
 Then remove spaces:
-update scrapedrecipeingredient set `modellednameshort` = REPLACE( `modelledname`, ' ', '');
+update scrapedrecipeingredient_current set `modellednameshort` = REPLACE( `modelledname`, ' ', '');
 
 Then get distinct list and put it in a table:
 INSERT INTO recipeingredient (name, displayname, autocompletename) 
