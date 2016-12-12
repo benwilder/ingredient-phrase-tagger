@@ -447,10 +447,3 @@ POST recipedb/recipe/_delete_by_query?conflicts=proceed
     "match_all": {}
   }
 }
-
-Need to clean the fields: 
-clean:
-[heaped]tsp
-tbsp
-[d+][k]g
-pack
