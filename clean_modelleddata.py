@@ -47,22 +47,21 @@ for row in cur:
     modellednameclean = re.sub(r'(\d+(\.\d+)?)cm', "", modellednameclean)
     modellednameclean = re.sub(r'approx ', "", modellednameclean)
 
-    if len(modelledname) !=len(modellednameclean):
-        updatecounter = updatecounter +1
-        # Update the record
-        curupdate.execute("UPDATE LearnRecipeIngredient SET  IngredientNameModelledShort = %s WHERE Guid = %s", (modellednameclean,ingredientid))
-        conn.commit()
 
-print "[2] Cleaned ingredients (" + str(updatecounter) + ")..."
+    # Update the record
+    curupdate.execute("UPDATE LearnRecipeIngredient SET  IngredientNameModelledShortClean = %s WHERE Guid = %s", (modellednameclean,ingredientid))
+    conn.commit()
+
+print "[2] Cleaned ingredients "
 
 
 # We are going to try to match them against synonyms to normalise them
 print "[3] Matching ingredients..."
-selectAllIngredients = "SELECT Guid, IngredientNameModelledShort FROM LearnRecipeIngredient"
+selectAllIngredients = "SELECT Guid, IngredientNameModelledShortClean FROM LearnRecipeIngredient"
 cur.execute(selectAllIngredients)
 
 for row in cur:
-    modellednameshort = row['IngredientNameModelledShort']
+    modellednameshort = row['IngredientNameModelledShortClean']
     ingredientid = row['Guid']
 
     # Get the synonyms that match this
