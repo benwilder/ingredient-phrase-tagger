@@ -17,17 +17,14 @@ print 'Importing into elastic search'
 
 # Select all ingredients for import
 selectIngredients = """
-SELECT 
-name,displayname,autocompletename
-FROM 
-recipeingredient_current
+SELECT DisplayName, ShortName FROM ServeRecipeIngredient
 """
 
 cur.execute(selectIngredients)
 for row in cur:
 	doc = {
-    'ingredient': row['name'].encode('utf-8'),
-    'ingredientdisplayname': row['displayname'].encode('utf-8'),
-    'ingredientautocompletename': row['autocompletename'].encode('utf-8')
+    'ingredient': row['ShortName'].encode('utf-8'),
+    'ingredientdisplayname': row['DisplayName'].encode('utf-8'),
+    'ingredientautocompletename': row['DisplayName'].encode('utf-8')
 	}
 	res = es.index(index='ingredientdb', doc_type='ingredient', body=doc)
