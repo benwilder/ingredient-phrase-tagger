@@ -13,7 +13,7 @@ es = Elasticsearch()
 conn = pymysql.connect(host='localhost', port=3306, user='dev_recipe', passwd='devrecipe', db='dev_recipe',charset='utf8')
 cur = conn.cursor(pymysql.cursors.DictCursor)
 
-print 'Importing into elastic search'
+print "[1] Creating Ingredient records in ES..."
 
 # Select all ingredients for import
 selectIngredients = """
@@ -28,3 +28,5 @@ for row in cur:
     'ingredientautocompletename': row['DisplayName'].encode('utf-8')
 	}
 	res = es.index(index='ingredientdb', doc_type='ingredient', body=doc)
+
+print "[1] Created Ingredient records in ES"

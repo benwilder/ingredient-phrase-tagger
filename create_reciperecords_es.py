@@ -16,7 +16,7 @@ es = Elasticsearch()
 conn = pymysql.connect(host='localhost', port=3306, user='dev_recipe', passwd='devrecipe', db='dev_recipe',charset='utf8')
 cur = conn.cursor(pymysql.cursors.DictCursor)
 
-print 'Importing into elastic search'
+print "[1] Creating Recipe records in ES..."
 
 # Select all recipes for import
 selectRecipes = """
@@ -47,3 +47,5 @@ for row in cur:
 	res = es.index(index='recipedb', doc_type='recipe', body=doc)
     #print(row['name'])
 #print(res['created'])
+
+print "[1] Created Recipe records in ES"
