@@ -31,10 +31,13 @@ for row in cur:
     # Perform cleaning
     modellednameclean = re.sub(r'(\d+(\.\d+)?)%', "", modelledname)
     modellednameclean = re.sub(r'(\d+(\.\d+)?)litres', "", modellednameclean)
-    modellednameclean = re.sub(r'tub ', "", modellednameclean)
+    modellednameclean = re.sub(r'tub', "", modellednameclean)
+    modellednameclean = re.sub(r'tsp', "", modellednameclean)
+    modellednameclean = re.sub(r'pot', "", modellednameclean)
+    modellednameclean = re.sub(r'carton', "", modellednameclean)
     modellednameclean = re.sub(r'(\d+(\.\d+)?)g', "", modellednameclean)
-    modellednameclean = re.sub(r'pack ', "", modellednameclean)
-    modellednameclean = re.sub(r'packs ', "", modellednameclean)
+    modellednameclean = re.sub(r'pack', "", modellednameclean)
+    modellednameclean = re.sub(r'packs', "", modellednameclean)
     modellednameclean = re.sub(r'x ', "", modellednameclean)
     modellednameclean = re.sub(r'(\d+(\.\d+)?)oz', "", modellednameclean)
     modellednameclean = re.sub(r'(\d+(\.\d+)?)kg', "", modellednameclean)
@@ -63,11 +66,11 @@ for row in cur:
     ingredientid = row['Guid']
 
     # Get the synonyms that match this
-    cursynonyms.execute("SELECT name FROM ingredientsynonym WHERE synonym = %s", (modellednameshort,))
+    cursynonyms.execute("SELECT ShortName FROM LearnRecipeIngredientSynonym WHERE ShortNameSynonym = %s", (modellednameshort,))
     for rowsynonym in cursynonyms:
 
     	# Where we find a match, update the master record
-    	matchedName = rowsynonym['name']
+    	matchedName = rowsynonym['ShortName']
     	#print "Found a match to " + matchedName + " adding to record"
     	curupdate.execute("UPDATE LearnRecipeIngredient SET  IngredientNameModelledShortMatched = %s WHERE Guid = %s", (matchedName,ingredientid))
         conn.commit()
