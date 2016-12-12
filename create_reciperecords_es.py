@@ -21,13 +21,14 @@ print "[1] Creating Recipe records in ES..."
 # Select all recipes for import
 selectRecipes = """
 SELECT 
-scrapedrecipe_current.`name`,
-scrapedrecipe_current.`scrapedurl`,
-`recipeingredientsearchrecord_current`.`ingredientsrequired`,
-recipeingredientsearchrecord_current.`ingredientsrequiredcount`
+RecipeName,
+IngredientNameModelledShortMatched,
+IngredientNameModelledShortMatchedCount,
+RecipeUrl
 FROM 
-scrapedrecipe_current INNER JOIN recipeingredientsearchrecord_current ON scrapedrecipe_current.`scrapedrecipeguid` = `recipeingredientsearchrecord_current`.`scrapedrecipeguid`
-ORDER BY scrapedrecipe_current.name ASC
+ServeRecipe
+WHERE IngredientNameModelledShortMatched IS NOT NULL
+ORDER BY RecipeName ASC
 """
 
 cur.execute(selectRecipes)
@@ -38,10 +39,10 @@ for row in cur:
 	#print ingredientList
 	#print i, row['ingredientsrequired'].deccode('utf-8')
 	doc = {
-    'title': row['name'].encode('utf-8'),
-    'url': row['scrapedurl'],
-    'ingredientsrequired': row['ingredientsrequired'].encode('utf-8'),
-    'ingredientsrequiredcount': str(row['ingredientsrequiredcount'])
+    'title': row['RecipeName'].encode('utf-8'),
+    'url': row['RecipeUrl'],
+    'ingredientsrequired': row['IngredientNameModelledShortMatched'].encode('utf-8'),
+    'ingredientsrequiredcount': str(row['IngredientNameModelledShortMatchedCount'])
 	}
 	i=i+1
 	res = es.index(index='recipedb', doc_type='recipe', body=doc)

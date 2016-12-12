@@ -10,8 +10,8 @@ cur = conn.cursor(pymysql.cursors.DictCursor)
 
 print "[1] Populating recipe table..."
 insertRecipes="""
-INSERT INTO ServeRecipe (RecipeName,IngredientNameModelledShortMatched,IngredientNameModelledShortMatchedCount)
-SELECT LearnRecipe.RecipeName, GROUP_CONCAT(LearnRecipeIngredient.`IngredientNameModelledShortMatched` SEPARATOR ' ') as IngredientsRequired, COUNT(LearnRecipeIngredient.`IngredientNameModelledShortMatched`) as IngredientsCount
+INSERT INTO ServeRecipe (RecipeName,IngredientNameModelledShortMatched,IngredientNameModelledShortMatchedCount,RecipeUrl)
+SELECT LearnRecipe.RecipeName, GROUP_CONCAT(LearnRecipeIngredient.`IngredientNameModelledShortMatched` SEPARATOR ' ') as IngredientsRequired, COUNT(LearnRecipeIngredient.`IngredientNameModelledShortMatched`) as IngredientsCount, LearnRecipe.CrawlUrl
 FROM LearnRecipeIngredient INNER JOIN LearnRecipe ON LearnRecipeIngredient.`RecipeGuid` = LearnRecipe.`Guid`
 GROUP BY LearnRecipeIngredient.`RecipeGuid`
 """
