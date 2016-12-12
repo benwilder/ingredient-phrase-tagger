@@ -1,0 +1,45 @@
+# Export data from the Learn tables
+
+1. Get at the data
+```sql
+SELECT LearnRecipeIngredient.`IngredientNameRaw` FROM LearnRecipeIngredient ORDER BY Id ASC
+```
+
+2. Export to CSV, saving as learn_<crawlername>_<yyyymmdd>_export.csv in learndatabaseexports
+3. Replace double quotes with nothing and save
+4. Run the model against the data 
+
+```bash
+python bin/parse-ingredients.py learndatabaseexports/learn_bbcgoodfood_20161212_export.csv > learndatabaseexports/learn_bbcgoodfood_20161212_export_results.txt
+```
+
+5. Convert this to JSON
+
+```bash
+python bin/convert-to-json.py learndatabaseexports/learn_bbcgoodfood_20161212_export_results.txt > learndatabaseexports/learn_bbcgoodfood_20161212_export_results_json.json
+```
+
+6. Top and tail this so it is easier to ingest:
+
+```json
+{
+    "results": 
+    		... contents of file...
+}
+```
+
+
+7. Get the modelled names:
+
+```bash
+python jsonreader.py learndatabaseexports/learn_bbcgoodfood_20161212_export_results_json.json > learndatabaseexports/learn_bbcgoodfood_20161212_export_results_final.txt
+```
+
+8. Remove column name from the top if somehow this got in there
+
+9. Export entire LearnRecipeIngredient table to desktop as csv (UTF-8)
+
+10. Paste in the model results into the csv, save and import into SQL database (as UTF-8)
+
+
+
