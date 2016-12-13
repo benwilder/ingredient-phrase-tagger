@@ -14,7 +14,7 @@ curupdate = conn.cursor(pymysql.cursors.DictCursor)
 print "[1] Removing spaces..."
 cur.execute("UPDATE LearnRecipeIngredient SET IngredientNameModelledShort = REPLACE( `IngredientNameModelled`, ' ', '')")
 conn.commit()
-print "[1] Spaces removed..."
+print "[1] Spaces removed"
 
 # Get all ingredients
 print "[2] Cleaning ingredients..."
@@ -97,3 +97,20 @@ cur.execute(updateAllRecipes)
 conn.commit()
 
 print "[4] Marked recipes complete"
+
+
+print "[5] Printing stats..."
+
+selectStats = """
+SELECT COUNT(LearnRecipe.`Guid`) as Total, SUM(CASE WHEN LearnRecipe.`IsReadyForServing` = 1 THEN 1 ELSE 0 END) Complete, (SUM(CASE WHEN LearnRecipe.`IsReadyForServing` = 1 THEN 1 ELSE 0 END) / COUNT(LearnRecipe.`Guid`) *100) as Percentage
+FROM
+LearnRecipe
+"""
+cur.execute(selectStats)
+
+for row in cur:
+    statsTotal = row['Total']
+    statsComplete = row['Complete']
+    statsPercentage = row['Percentage']
+
+    print "[5] Stats - Total: " + str(statsTotal) + " Complete: " + str(statsComplete) + " Percentage: " + str(statsPercentage) + "%"
