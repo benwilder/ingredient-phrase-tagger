@@ -74,4 +74,26 @@ for row in cur:
     	curupdate.execute("UPDATE LearnRecipeIngredient SET  IngredientNameModelledShortMatched = %s WHERE Guid = %s", (matchedName,ingredientid))
         conn.commit()
 
-print "[3] Matched ingredients..."
+print "[3] Matched ingredients"
+
+print "[4] Marking Recipes complete..."
+
+# Mark all recipes as invalid
+curupdate.execute("UPDATE LearnRecipe SET IsReadyForServing = 0")
+conn.commit()
+
+# Now update all recipes if they have a full set of matched ingredients
+updateAllRecipes = """
+UPDATE LearnRecipe INNER JOIN 
+(SELECT LearnRecipeIngredient.`RecipeGuid`, (COUNT(LearnRecipeIngredient.`Guid`) - SUM(CASE WHEN LearnRecipeIngredient.`IngredientNameModelledShortMatched` IS NOT NULL THEN 1 ELSE 0 END)) as MissingIngredients
+FROM 
+LearnRecipeIngredient
+GROUP BY LearnRecipeIngredient.RecipeGuid
+HAVING MissingIngredients =0
+ORDER BY MissingIngredients ASC) Ings ON LearnRecipe.`Guid` = Ings.RecipeGuid 
+SET LearnRecipe.`IsReadyForServing` =1
+"""
+cur.execute(updateAllRecipes)
+conn.commit()
+
+print "[4] Marked recipes complete"
