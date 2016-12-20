@@ -10,34 +10,25 @@ cur = conn.cursor(pymysql.cursors.DictCursor)
 cursynonyms = conn.cursor(pymysql.cursors.DictCursor)
 curupdate = conn.cursor(pymysql.cursors.DictCursor)
 
-# Update the Ingredients by removing the spaces
-print "[1] Removing spaces..."
-cur.execute("UPDATE LearnRecipeIngredient SET IngredientNameModelledShort = REPLACE( `IngredientNameModelled`, ' ', '')")
-conn.commit()
-print "[1] Spaces removed"
-
-# Get all ingredients
-print "[2] Cleaning ingredients..."
-selectIngredients = "SELECT Guid, IngredientNameModelledShort FROM LearnRecipeIngredient"
+# Get all the ingredients so that we can clean them up
+print "[1] Getting and cleaning ingredients..."
+selectIngredients = "SELECT Guid, IngredientNameModelled FROM LearnRecipeIngredient"
 cur.execute(selectIngredients)
 
-# We want to clean the following
-updatecounter = 0
-
 for row in cur:
-    modelledname = row['IngredientNameModelledShort']
+    modelledname = row['IngredientNameModelled']
     ingredientid = row['Guid']
 
     # Perform cleaning
     modellednameclean = re.sub(r'(\d+(\.\d+)?)%', "", modelledname)
     modellednameclean = re.sub(r'(\d+(\.\d+)?)litres', "", modellednameclean)
-    modellednameclean = re.sub(r'tub', "", modellednameclean)
-    modellednameclean = re.sub(r'tsp', "", modellednameclean)
-    modellednameclean = re.sub(r'pot', "", modellednameclean)
-    modellednameclean = re.sub(r'carton', "", modellednameclean)
+    modellednameclean = re.sub(r'tub ', "", modellednameclean)
+    modellednameclean = re.sub(r'tsp ', "", modellednameclean)
+    modellednameclean = re.sub(r'pot ', "", modellednameclean)
+    modellednameclean = re.sub(r'carton ', "", modellednameclean)
     modellednameclean = re.sub(r'(\d+(\.\d+)?)g', "", modellednameclean)
-    modellednameclean = re.sub(r'pack', "", modellednameclean)
-    modellednameclean = re.sub(r'packs', "", modellednameclean)
+    modellednameclean = re.sub(r'pack ', "", modellednameclean)
+    modellednameclean = re.sub(r'packs ', "", modellednameclean)
     modellednameclean = re.sub(r'x ', "", modellednameclean)
     modellednameclean = re.sub(r'(\d+(\.\d+)?)oz', "", modellednameclean)
     modellednameclean = re.sub(r'(\d+(\.\d+)?)kg', "", modellednameclean)
@@ -49,19 +40,26 @@ for row in cur:
 
 
     # Update the record
-    curupdate.execute("UPDATE LearnRecipeIngredient SET  IngredientNameModelledShortClean = %s WHERE Guid = %s", (modellednameclean,ingredientid))
+    curupdate.execute("UPDATE LearnRecipeIngredient SET  IngredientNameModelledClean = %s WHERE Guid = %s", (modellednameclean,ingredientid))
     conn.commit()
 
-print "[2] Cleaned ingredients "
+print "[1] Cleaned ingredients"
+
+# Remove spaces from the ingredients
+print "[2] Removing spaces..."
+cur.execute("UPDATE LearnRecipeIngredient SET IngredientNameModelledCleanShort = REPLACE( `IngredientNameModelledClean`, ' ', '')")
+conn.commit()
+print "[2] Spaces removed"
+
 
 
 # We are going to try to match them against synonyms to normalise them
 print "[3] Matching ingredients..."
-selectAllIngredients = "SELECT Guid, IngredientNameModelledShortClean FROM LearnRecipeIngredient"
+selectAllIngredients = "SELECT Guid, IngredientNameModelledCleanShort FROM LearnRecipeIngredient"
 cur.execute(selectAllIngredients)
 
 for row in cur:
-    modellednameshort = row['IngredientNameModelledShortClean']
+    modellednameshort = row['IngredientNameModelledCleanShort']
     ingredientid = row['Guid']
 
     # Get the synonyms that match this
@@ -71,7 +69,7 @@ for row in cur:
     	# Where we find a match, update the master record
     	matchedName = rowsynonym['ShortName']
     	#print "Found a match to " + matchedName + " adding to record"
-    	curupdate.execute("UPDATE LearnRecipeIngredient SET  IngredientNameModelledShortMatched = %s WHERE Guid = %s", (matchedName,ingredientid))
+    	curupdate.execute("UPDATE LearnRecipeIngredient SET  IngredientNameMatched = %s WHERE Guid = %s", (matchedName,ingredientid))
         conn.commit()
 
 print "[3] Matched ingredients"
@@ -85,7 +83,7 @@ conn.commit()
 # Now update all recipes if they have a full set of matched ingredients
 updateAllRecipes = """
 UPDATE LearnRecipe INNER JOIN 
-(SELECT LearnRecipeIngredient.`RecipeGuid`, (COUNT(LearnRecipeIngredient.`Guid`) - SUM(CASE WHEN LearnRecipeIngredient.`IngredientNameModelledShortMatched` IS NOT NULL THEN 1 ELSE 0 END)) as MissingIngredients
+(SELECT LearnRecipeIngredient.`RecipeGuid`, (COUNT(LearnRecipeIngredient.`Guid`) - SUM(CASE WHEN LearnRecipeIngredient.`IngredientNameMatched` IS NOT NULL THEN 1 ELSE 0 END)) as MissingIngredients
 FROM 
 LearnRecipeIngredient
 GROUP BY LearnRecipeIngredient.RecipeGuid

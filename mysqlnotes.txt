@@ -18,6 +18,6 @@ ORDER BY count DESC
 Get most popular ingredients that dont have a match from ingredient DB:
 SELECT LearnRecipeIngredient.`IngredientNameModelled`, COUNT(LearnRecipeIngredient.`IngredientNameModelled`) as count
 FROM LearnRecipeIngredient
-WHERE LearnRecipeIngredient.`IngredientNameModelledShortMatched` IS NULL
+WHERE LearnRecipeIngredient.`IngredientNameMatched` IS NULL
 GROUP BY LearnRecipeIngredient.`IngredientNameModelled`
 ORDER BY count DESC
